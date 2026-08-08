@@ -1,0 +1,20 @@
+[Unit]
+Description=AV1 video encoding queue worker
+After=local-fs.target
+RequiresMountsFor=/srv/video/incoming /srv/video/av1
+
+[Service]
+User=zevans
+Group=zevans
+Environment=HOME=/home/zevans
+ExecStart=/usr/local/bin/av1-queue-worker
+Restart=on-failure
+RestartSec=10
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
+TimeoutStopSec=300
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Watch recursively for videos to encode as AV1
+After=local-fs.target
+RequiresMountsFor=/srv/video/incoming
+
+[Service]
+Type=simple
+User=zevans
+Group=zevans
+ExecStart=/usr/local/bin/watch-av1-folder
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
