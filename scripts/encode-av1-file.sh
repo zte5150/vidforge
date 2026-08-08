@@ -82,7 +82,7 @@ fi
 # ffprobe shipped in the encoding image so the host needs no media packages.
 if ! video_codec="$(podman run --rm \
     --network=none \
-    --volume "$SOURCE_ROOT:/input:ro,Z" \
+    --volume "$SOURCE_ROOT:/input:ro,z" \
     --entrypoint ffprobe \
     lscr.io/linuxserver/ffmpeg:latest \
     -v error \
@@ -129,8 +129,9 @@ container_output="/output/$temp_relative"
 if podman run --rm \
     --name "av1-encode-$(printf '%s' "$relative_path" | sha256sum | cut -c1-12)" \
     --network=none \
-    --volume "$SOURCE_ROOT:/input:ro,Z" \
-    --volume "$OUTPUT_ROOT:/output:Z" \
+    --volume "$SOURCE_ROOT:/input:ro,z" \
+    --volume "$OUTPUT_ROOT:/output:z" \
+    --entrypoint ffmpeg \
     lscr.io/linuxserver/ffmpeg:latest \
     -hide_banner \
     -nostdin \
