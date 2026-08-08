@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate and build RPM
+    runs-on: ubuntu-latest
+    container: fedora:latest
+
+    steps:
+      - name: Install validation and build tools
+        run: >-
+          dnf --assumeyes --setopt=install_weak_deps=False install
+          ShellCheck
+          git
+          make
+          rpm-build
+          rpmlint
+          systemd
+
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Check Bash syntax
+        shell: bash
+        run: bash -n scripts/*.sh
+
+      - name: Run ShellCheck
+        run: shellcheck scripts/*.sh
+
+      - name: Validate systemd units
+        run: |
+          install -Dpm 0755 scripts/av1-queue-worker.sh /usr/bin/av1-queue-worker
+          install -Dpm 0755 scripts/encode-av1-file.sh /usr/bin/encode-av1-file
+          install -Dpm 0755 scripts/queue-av1-file.sh /usr/bin/queue-av1-file
+          install -Dpm 0755 scripts/watch-av1-folder.sh /usr/bin/watch-av1-folder
+          systemd-analyze verify service/*.service
+
+      - name: Build RPM
+        run: make rpm
+
+      - name: Lint RPM packages
+        run: rpmlint build/rpmbuild/RPMS/**/*.rpm build/rpmbuild/SRPMS/*.rpm
