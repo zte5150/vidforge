@@ -2,8 +2,18 @@
 
 set -Eeuo pipefail
 
-QUEUE_DIR="/var/lib/av1-encoder/queue"
-FAILED_DIR="/var/lib/av1-encoder/failed"
+CONFIG_FILE="${AV1_CONFIG_FILE:-/etc/av1-encoder.conf}"
+
+if [[ ! -r "$CONFIG_FILE" ]]; then
+    printf 'Configuration file is not readable: %s\n' "$CONFIG_FILE" >&2
+    exit 1
+fi
+
+# shellcheck source=/etc/av1-encoder.conf
+source "$CONFIG_FILE"
+
+: "${QUEUE_DIR:?QUEUE_DIR is not configured}"
+: "${FAILED_DIR:?FAILED_DIR is not configured}"
 
 mkdir -p -- "$QUEUE_DIR" "$FAILED_DIR"
 

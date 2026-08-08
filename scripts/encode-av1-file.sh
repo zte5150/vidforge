@@ -2,13 +2,21 @@
 
 set -Eeuo pipefail
 
-SOURCE_ROOT="/srv/video/incoming"
-OUTPUT_ROOT="/srv/video/av1"
-LOG_DIR="/var/log/av1-encoder"
+CONFIG_FILE="${AV1_CONFIG_FILE:-/etc/av1-encoder.conf}"
 
-# SVT-AV1 settings
-AV1_PRESET="6"
-AV1_CRF="28"
+if [[ ! -r "$CONFIG_FILE" ]]; then
+    printf 'Configuration file is not readable: %s\n' "$CONFIG_FILE" >&2
+    exit 1
+fi
+
+# shellcheck source=/etc/av1-encoder.conf
+source "$CONFIG_FILE"
+
+: "${SOURCE_ROOT:?SOURCE_ROOT is not configured}"
+: "${OUTPUT_ROOT:?OUTPUT_ROOT is not configured}"
+: "${LOG_DIR:?LOG_DIR is not configured}"
+: "${AV1_PRESET:?AV1_PRESET is not configured}"
+: "${AV1_CRF:?AV1_CRF is not configured}"
 
 input_file="${1:?Usage: encode-av1-file INPUT_FILE}"
 

@@ -2,7 +2,17 @@
 
 set -Eeuo pipefail
 
-SOURCE_ROOT="/srv/video/incoming"
+CONFIG_FILE="${AV1_CONFIG_FILE:-/etc/av1-encoder.conf}"
+
+if [[ ! -r "$CONFIG_FILE" ]]; then
+    printf 'Configuration file is not readable: %s\n' "$CONFIG_FILE" >&2
+    exit 1
+fi
+
+# shellcheck source=/etc/av1-encoder.conf
+source "$CONFIG_FILE"
+
+: "${SOURCE_ROOT:?SOURCE_ROOT is not configured}"
 
 mkdir -p -- "$SOURCE_ROOT"
 
