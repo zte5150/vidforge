@@ -57,6 +57,7 @@ relative_path="${input_file#"$source_root"/}"
 relative_dir="$(dirname -- "$relative_path")"
 base_name="$(basename -- "$relative_path")"
 stem="${base_name%.*}"
+container_input="/input/$relative_path"
 
 output_dir="$OUTPUT_ROOT"
 
@@ -74,6 +75,28 @@ mkdir -p -- "$LOG_DIR"
 
 if [[ -f "$output_file" && -f "$done_file" ]]; then
     log "Already encoded: $relative_path"
+    exit 0
+fi
+
+# Skip files whose first video stream is already encoded with AV1. Use the
+# ffprobe shipped in the encoding image so the host needs no media packages.
+if ! video_codec="$(podman run --rm \
+    --network=none \
+    --volume "$SOURCE_ROOT:/input:ro,Z" \
+    --entrypoint ffprobe \
+    lscr.io/linuxserver/ffmpeg:latest \
+    -v error \
+    -select_streams v:0 \
+    -show_entries stream=codec_name \
+    -of default=noprint_wrappers=1:nokey=1 \
+    "$container_input")"
+then
+    log "Unable to determine video codec: $relative_path"
+    exit 1
+fi
+
+if [[ "$video_codec" == "av1" ]]; then
+    log "Already encoded as AV1: $relative_path"
     exit 0
 fi
 
@@ -99,7 +122,6 @@ log "Output:   $output_file"
 
 rm -f -- "$temp_file"
 
-container_input="/input/$relative_path"
 temp_relative="${temp_file#"$OUTPUT_ROOT"/}"
 container_output="/output/$temp_relative"
 
