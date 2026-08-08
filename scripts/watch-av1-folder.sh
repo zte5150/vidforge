@@ -32,7 +32,7 @@ find "$SOURCE_ROOT" -type f \
         -iname '*.m2ts' \
     \) -print0 |
 while IFS= read -r -d '' video_file; do
-    /usr/local/bin/queue-av1-file "$video_file"
+    queue-av1-file "$video_file"
 done
 
 # close_write handles files written directly into the folder.
@@ -46,5 +46,5 @@ inotifywait \
     --no-newline \
     "$SOURCE_ROOT" |
 while IFS= read -r -d '' video_file; do
-    /usr/local/bin/queue-av1-file "$video_file"
+    queue-av1-file "$video_file"
 done

@@ -32,7 +32,7 @@ while true; do
 
     input_file="$(cat -- "$queue_file")"
 
-    if /usr/local/bin/encode-av1-file "$input_file"; then
+    if encode-av1-file "$input_file"; then
         rm -f -- "$queue_file"
     else
         failed_name="$(basename -- "$queue_file")"

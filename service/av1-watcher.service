@@ -8,7 +8,7 @@ Type=simple
 User=av1-encoder
 Group=av1-encoder
 StateDirectory=av1-encoder
-ExecStart=/usr/local/bin/watch-av1-folder
+ExecStart=/usr/bin/watch-av1-folder
 Restart=on-failure
 RestartSec=5
 

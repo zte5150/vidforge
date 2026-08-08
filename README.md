@@ -42,6 +42,36 @@ disabled.
 
 ## Installation
 
+### RPM package (Fedora/RHEL family)
+
+Install the RPM build tools and build from a committed revision:
+
+```bash
+sudo dnf install git make rpm-build systemd-rpm-macros
+make rpm
+sudo dnf install ./build/rpmbuild/RPMS/noarch/av1-encoder-*.noarch.rpm
+```
+
+The build uses `git archive`, so commit the files you want included first.
+After installation, edit `/etc/av1-encoder.conf`, create and grant access to
+the configured media directories, pull the container image, and enable the
+services:
+
+```bash
+sudoedit /etc/av1-encoder.conf
+sudo mkdir -p /srv/video/incoming /srv/video/av1
+sudo chown -R av1-encoder:av1-encoder /srv/video/incoming /srv/video/av1
+sudo -u av1-encoder -H podman pull lscr.io/linuxserver/ffmpeg:latest
+sudo systemctl enable --now av1-watcher.service av1-worker.service
+```
+
+The RPM preserves a locally edited configuration during upgrades. Before
+publishing the package, replace the placeholder URL, maintainer identity, and
+`LicenseRef-Unknown` metadata in `packaging/av1-encoder.spec` and add the
+corresponding license file.
+
+### Manual installation
+
 Run these commands from the repository root. The units use a dedicated system
 account named `av1-encoder`.
 
@@ -60,10 +90,10 @@ account named `av1-encoder`.
 2. Install the scripts, configuration, and systemd units:
 
    ```bash
-   sudo install -m 0755 scripts/av1-queue-worker.sh /usr/local/bin/av1-queue-worker
-   sudo install -m 0755 scripts/encode-av1-file.sh /usr/local/bin/encode-av1-file
-   sudo install -m 0755 scripts/queue-av1-file.sh /usr/local/bin/queue-av1-file
-   sudo install -m 0755 scripts/watch-av1-folder.sh /usr/local/bin/watch-av1-folder
+   sudo install -m 0755 scripts/av1-queue-worker.sh /usr/bin/av1-queue-worker
+   sudo install -m 0755 scripts/encode-av1-file.sh /usr/bin/encode-av1-file
+   sudo install -m 0755 scripts/queue-av1-file.sh /usr/bin/queue-av1-file
+   sudo install -m 0755 scripts/watch-av1-folder.sh /usr/bin/watch-av1-folder
    sudo install -m 0644 config/av1-encoder.conf.example /etc/av1-encoder.conf
    sudo install -m 0644 service/av1-watcher.service /etc/systemd/system/av1-watcher.service
    sudo install -m 0644 service/av1-worker.service /etc/systemd/system/av1-worker.service
@@ -164,7 +194,7 @@ manually:
 
 ```bash
 sudo -u av1-encoder -H \
-  /usr/local/bin/queue-av1-file /srv/video/incoming/path/to/video.mp4
+  /usr/bin/queue-av1-file /srv/video/incoming/path/to/video.mp4
 ```
 
 ## Operational notes

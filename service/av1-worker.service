@@ -11,7 +11,7 @@ Environment=XDG_RUNTIME_DIR=/run/av1-encoder
 StateDirectory=av1-encoder
 LogsDirectory=av1-encoder
 RuntimeDirectory=av1-encoder
-ExecStart=/usr/local/bin/av1-queue-worker
+ExecStart=/usr/bin/av1-queue-worker
 Restart=on-failure
 RestartSec=10
 Nice=10
