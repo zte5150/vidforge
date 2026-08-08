@@ -23,6 +23,7 @@ jobs:
           dnf --assumeyes --setopt=install_weak_deps=False install
           ShellCheck
           git
+          glibc-langpack-en
           make
           rpm-build
           rpmlint

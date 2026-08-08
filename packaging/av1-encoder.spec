@@ -18,8 +18,8 @@ Requires:       podman
 %{?systemd_requires}
 
 %description
-A pair of systemd services that watch a directory tree, persistently queue
-video files, and encode them to AV1 one at a time using FFmpeg in Podman.
+A pair of service units that watch a directory tree, persistently queue video
+files, and encode them to AV1 one at a time using FFmpeg in Podman.
 
 %prep
 %autosetup
