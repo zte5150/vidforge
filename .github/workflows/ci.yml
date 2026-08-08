@@ -36,7 +36,9 @@ jobs:
         run: bash -n scripts/*.sh
 
       - name: Run ShellCheck
-        run: shellcheck -x scripts/*.sh
+        run: |
+          install -Dpm 0644 config/av1-encoder.conf.example /etc/av1-encoder.conf
+          shellcheck -x scripts/*.sh
 
       - name: Validate systemd units
         run: |
