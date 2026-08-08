@@ -66,9 +66,8 @@ sudo systemctl enable --now av1-watcher.service av1-worker.service
 ```
 
 The RPM preserves a locally edited configuration during upgrades. Before
-publishing the package, replace the placeholder URL, maintainer identity, and
-`LicenseRef-Unknown` metadata in `packaging/av1-encoder.spec` and add the
-corresponding license file.
+publishing the package, replace the placeholder maintainer identity in
+`packaging/av1-encoder.spec`.
 
 ### Manual installation
 
@@ -208,3 +207,8 @@ sudo -u av1-encoder -H \
   deleted by these scripts.
 - Because the image tag is `latest`, pull it deliberately when you want to
   update FFmpeg. Restart the worker after pulling if an encode is active.
+
+## License
+
+This project is licensed under the GNU General Public License, version 3. See
+[LICENSE](LICENSE) for the full license text.

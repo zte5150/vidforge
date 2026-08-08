@@ -3,8 +3,7 @@ Version:        0.1.0
 Release:        1%{?dist}
 Summary:        Directory-watching AV1 video encoding service
 
-# Choose and document a project license before publishing this package.
-License:        LicenseRef-Unknown
+License:        GPL-3.0-only
 URL:            https://github.com/zte5150/encode_videos_service
 Source0:        %{name}-%{version}.tar.gz
 Source1:        %{name}.sysusers
@@ -59,6 +58,7 @@ install -Dpm 0644 %{SOURCE1} \
 
 %files
 %doc README.md
+%license LICENSE
 %config(noreplace) %{_sysconfdir}/av1-encoder.conf
 %{_bindir}/av1-queue-worker
 %{_bindir}/encode-av1-file
