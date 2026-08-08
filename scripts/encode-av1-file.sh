@@ -95,10 +95,9 @@ container_input="/input/$relative_path"
 temp_relative="${temp_file#"$OUTPUT_ROOT"/}"
 container_output="/output/$temp_relative"
 
+# Run the encoding in a container to avoid polluting the host with dependencies.
 if podman run --rm \
     --name "av1-encode-$(printf '%s' "$relative_path" | sha256sum | cut -c1-12)" \
-    --userns=keep-id \
-    --security-opt=no-new-privileges \
     --network=none \
     --volume "$SOURCE_ROOT:/input:ro,Z" \
     --volume "$OUTPUT_ROOT:/output:Z" \
