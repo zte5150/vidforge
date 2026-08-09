@@ -57,3 +57,9 @@ jobs:
 
       - name: Lint RPM packages
         run: rpmlint build/rpmbuild/RPMS/**/*.rpm build/rpmbuild/SRPMS/*.rpm
+
+      - name: Install and verify RPM
+        run: |
+          dnf --assumeyes --setopt=install_weak_deps=False install \
+            build/rpmbuild/RPMS/noarch/av1-encoder-*.noarch.rpm
+          rpm --verify av1-encoder
