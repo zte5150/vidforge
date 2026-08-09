@@ -7,6 +7,17 @@ QUEUE_DIR="/var/lib/vidforge/queue"
 FAILED_DIR="/var/lib/vidforge/failed"
 LOG_DIR="/var/log/vidforge"
 
-# SVT-AV1 settings
+# Encoding container and video settings
+FFMPEG_IMAGE="lscr.io/linuxserver/ffmpeg:latest"
+VIDEO_CODEC="libsvtav1"
 AV1_PRESET="6"
 AV1_CRF="28"
+VIDEO_PIXEL_FORMAT="yuv420p10le"
+VIDEO_ENCODER_PARAMS="tune=0"
+
+# Audio, subtitle, and data stream settings. Leave AUDIO_BITRATE empty to omit
+# the bitrate option (for example, when AUDIO_CODEC="copy").
+AUDIO_CODEC="libopus"
+AUDIO_BITRATE="160k"
+SUBTITLE_CODEC="copy"
+DATA_CODEC="copy"

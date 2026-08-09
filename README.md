@@ -22,9 +22,9 @@ The output directory mirrors the source directory structure. For example:
 5. A successful encode creates both an `.av1.mkv` file and a `.done` marker.
    Failed queue entries are moved to the configured failed directory.
 
-Video is encoded with SVT-AV1 as 10-bit 4:2:0, audio is converted to Opus at
-160 kb/s, and subtitle and data streams are copied. Metadata and chapters are
-preserved.
+By default, video is encoded with SVT-AV1 as 10-bit 4:2:0, audio is converted
+to Opus at 160 kb/s, and subtitle and data streams are copied. These encoding
+choices are configurable. Metadata and chapters are preserved.
 
 ## Requirements
 
@@ -158,8 +158,16 @@ location.
 | `QUEUE_DIR` | Pending queue entries | `/var/lib/vidforge/queue` |
 | `FAILED_DIR` | Queue entries whose encode failed | `/var/lib/vidforge/failed` |
 | `LOG_DIR` | Per-file FFmpeg logs | `/var/log/vidforge` |
+| `FFMPEG_IMAGE` | Container image providing FFmpeg and FFprobe | `lscr.io/linuxserver/ffmpeg:latest` |
+| `VIDEO_CODEC` | FFmpeg video encoder | `libsvtav1` |
 | `AV1_PRESET` | SVT-AV1 speed/efficiency preset | `6` |
 | `AV1_CRF` | SVT-AV1 quality target; lower is higher quality | `28` |
+| `VIDEO_PIXEL_FORMAT` | Output video pixel format | `yuv420p10le` |
+| `VIDEO_ENCODER_PARAMS` | Value passed to `-svtav1-params`; empty omits it | `tune=0` |
+| `AUDIO_CODEC` | FFmpeg audio encoder, or `copy` | `libopus` |
+| `AUDIO_BITRATE` | Audio bitrate; empty omits `-b:a` | `160k` |
+| `SUBTITLE_CODEC` | FFmpeg subtitle encoder, or `copy` | `copy` |
+| `DATA_CODEC` | FFmpeg data-stream encoder, or `copy` | `copy` |
 
 Keep this file owned by root and not writable by the service account because
 the scripts load it as shell code.

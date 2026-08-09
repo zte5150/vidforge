@@ -15,8 +15,17 @@ source "$CONFIG_FILE"
 : "${SOURCE_ROOT:?SOURCE_ROOT is not configured}"
 : "${OUTPUT_ROOT:?OUTPUT_ROOT is not configured}"
 : "${LOG_DIR:?LOG_DIR is not configured}"
-: "${AV1_PRESET:?AV1_PRESET is not configured}"
-: "${AV1_CRF:?AV1_CRF is not configured}"
+
+FFMPEG_IMAGE="${FFMPEG_IMAGE:-lscr.io/linuxserver/ffmpeg:latest}"
+VIDEO_CODEC="${VIDEO_CODEC:-libsvtav1}"
+AV1_PRESET="${AV1_PRESET:-6}"
+AV1_CRF="${AV1_CRF:-28}"
+VIDEO_PIXEL_FORMAT="${VIDEO_PIXEL_FORMAT:-yuv420p10le}"
+VIDEO_ENCODER_PARAMS="${VIDEO_ENCODER_PARAMS-tune=0}"
+AUDIO_CODEC="${AUDIO_CODEC:-libopus}"
+AUDIO_BITRATE="${AUDIO_BITRATE-160k}"
+SUBTITLE_CODEC="${SUBTITLE_CODEC:-copy}"
+DATA_CODEC="${DATA_CODEC:-copy}"
 
 input_file="${1:?Usage: vidforge-encode INPUT_FILE}"
 
@@ -84,7 +93,7 @@ if ! video_codec="$(podman run --rm \
     --network=none \
     --volume "$SOURCE_ROOT:/input:ro,z" \
     --entrypoint ffprobe \
-    lscr.io/linuxserver/ffmpeg:latest \
+    "$FFMPEG_IMAGE" \
     -v error \
     -select_streams v:0 \
     -show_entries stream=codec_name \
@@ -125,6 +134,23 @@ rm -f -- "$temp_file"
 temp_relative="${temp_file#"$OUTPUT_ROOT"/}"
 container_output="/output/$temp_relative"
 
+video_options=(
+    -c:v "$VIDEO_CODEC"
+    -preset "$AV1_PRESET"
+    -crf "$AV1_CRF"
+    -pix_fmt "$VIDEO_PIXEL_FORMAT"
+)
+
+if [[ -n "$VIDEO_ENCODER_PARAMS" ]]; then
+    video_options+=( -svtav1-params "$VIDEO_ENCODER_PARAMS" )
+fi
+
+audio_options=( -c:a "$AUDIO_CODEC" )
+
+if [[ -n "$AUDIO_BITRATE" ]]; then
+    audio_options+=( -b:a "$AUDIO_BITRATE" )
+fi
+
 # Run the encoding in a container to avoid polluting the host with dependencies.
 if podman run --rm \
     --name "av1-encode-$(printf '%s' "$relative_path" | sha256sum | cut -c1-12)" \
@@ -132,7 +158,7 @@ if podman run --rm \
     --volume "$SOURCE_ROOT:/input:ro,z" \
     --volume "$OUTPUT_ROOT:/output:z" \
     --entrypoint ffmpeg \
-    lscr.io/linuxserver/ffmpeg:latest \
+    "$FFMPEG_IMAGE" \
     -hide_banner \
     -nostdin \
     -y \
@@ -140,15 +166,10 @@ if podman run --rm \
     -map 0 \
     -map_metadata 0 \
     -map_chapters 0 \
-    -c:v libsvtav1 \
-    -preset "$AV1_PRESET" \
-    -crf "$AV1_CRF" \
-    -pix_fmt yuv420p10le \
-    -svtav1-params "tune=0" \
-    -c:a libopus \
-    -b:a 160k \
-    -c:s copy \
-    -c:d copy \
+    "${video_options[@]}" \
+    "${audio_options[@]}" \
+    -c:s "$SUBTITLE_CODEC" \
+    -c:d "$DATA_CODEC" \
     "$container_output" >>"$log_file" 2>&1
 then
     mv -- "$temp_file" "$output_file"

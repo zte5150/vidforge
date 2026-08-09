@@ -21,8 +21,16 @@ OUTPUT_ROOT="$OUTPUT_ROOT"
 QUEUE_DIR="$QUEUE_DIR"
 FAILED_DIR="$FAILED_DIR"
 LOG_DIR="$LOG_DIR"
+FFMPEG_IMAGE="lscr.io/linuxserver/ffmpeg:latest"
+VIDEO_CODEC="libsvtav1"
 AV1_PRESET="6"
 AV1_CRF="28"
+VIDEO_PIXEL_FORMAT="yuv420p10le"
+VIDEO_ENCODER_PARAMS="tune=0"
+AUDIO_CODEC="libopus"
+AUDIO_BITRATE="160k"
+SUBTITLE_CODEC="copy"
+DATA_CODEC="copy"
 EOF
 }
 
@@ -137,4 +145,56 @@ EOF
     [ -f "$output_file" ]
     [ -f "$output_file.done" ]
     [ ! -e "$output_file.partial.mkv" ]
+}
+
+@test "encoder passes configured encoding options to FFmpeg" {
+    input_file="$SOURCE_ROOT/example.mp4"
+    touch "$input_file"
+
+    cat >>"$CONFIG_FILE" <<'EOF'
+VIDEO_CODEC="libaom-av1"
+AV1_PRESET="4"
+AV1_CRF="31"
+VIDEO_PIXEL_FORMAT="yuv420p"
+VIDEO_ENCODER_PARAMS=""
+AUDIO_CODEC="copy"
+AUDIO_BITRATE=""
+SUBTITLE_CODEC="webvtt"
+DATA_CODEC="bin_data"
+EOF
+
+    cat >"$MOCK_BIN/sleep" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+    cat >"$MOCK_BIN/podman" <<'EOF'
+#!/usr/bin/env bash
+if [[ " $* " == *" --entrypoint ffprobe "* ]]; then
+    printf 'h264\n'
+    exit 0
+fi
+
+printf '%s\n' "$@" >"$TEST_ARGS_FILE"
+container_output="${!#}"
+relative_output="${container_output#/output/}"
+touch "$TEST_OUTPUT_ROOT/$relative_output"
+EOF
+    chmod +x "$MOCK_BIN/sleep" "$MOCK_BIN/podman"
+
+    run env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        TEST_OUTPUT_ROOT="$OUTPUT_ROOT" \
+        TEST_ARGS_FILE="$TEST_ROOT/ffmpeg.args" \
+        PATH="$MOCK_BIN:$PATH" \
+        bash "$REPO_ROOT/scripts/vidforge-encode.sh" "$input_file"
+
+    [ "$status" -eq 0 ]
+    grep -Fxq 'libaom-av1' "$TEST_ROOT/ffmpeg.args"
+    grep -Fxq '4' "$TEST_ROOT/ffmpeg.args"
+    grep -Fxq '31' "$TEST_ROOT/ffmpeg.args"
+    grep -Fxq 'yuv420p' "$TEST_ROOT/ffmpeg.args"
+    grep -Fxq 'copy' "$TEST_ROOT/ffmpeg.args"
+    grep -Fxq 'webvtt' "$TEST_ROOT/ffmpeg.args"
+    grep -Fxq 'bin_data' "$TEST_ROOT/ffmpeg.args"
+    ! grep -Fxq -- '-svtav1-params' "$TEST_ROOT/ffmpeg.args"
+    ! grep -Fxq -- '-b:a' "$TEST_ROOT/ffmpeg.args"
 }
