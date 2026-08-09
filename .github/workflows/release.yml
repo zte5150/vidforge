@@ -13,20 +13,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
-    name: Build and publish release
+  validate:
+    name: Validate release
     runs-on: ubuntu-latest
-    container: fedora:latest
-    env:
-      GH_TOKEN: ${{ github.token }}
+    container: fedora:44
 
     steps:
-      - name: Install validation and release tools
+      - name: Install validation tools
         run: >-
           dnf --assumeyes --setopt=install_weak_deps=False install
           bats
           git
-          gh
           glibc-langpack-en
           make
           rpm-build
@@ -50,9 +47,9 @@ jobs:
 
           if [[ "$tag_version" != "$make_version" || \
                 "$tag_version" != "$spec_version" ]]; then
-              printf 'Version mismatch: tag=%s Makefile=%s spec=%s\n' \
-                "$tag_version" "$make_version" "$spec_version" >&2
-              exit 1
+            printf 'Version mismatch: tag=%s Makefile=%s spec=%s\n' \
+              "$tag_version" "$make_version" "$spec_version" >&2
+            exit 1
           fi
 
       - name: Validate Bash scripts
@@ -72,10 +69,51 @@ jobs:
           install -Dpm 0755 scripts/vidforge-watch.sh /usr/bin/vidforge-watch
           systemd-analyze verify service/*.service
 
-      - name: Build and lint RPM packages
+      - name: Lint RPM packages
         run: |
           make rpm
           rpmlint build/rpmbuild/RPMS/**/*.rpm build/rpmbuild/SRPMS/*.rpm
+
+  build-rpm:
+    name: Build RPM (${{ matrix.target }})
+    needs: validate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: fedora-44
+            image: fedora:44
+            enable_epel: false
+          - target: rocky-9
+            image: rockylinux:9
+            enable_epel: true
+          - target: almalinux-9
+            image: almalinux:9
+            enable_epel: true
+    container: ${{ matrix.image }}
+
+    steps:
+      - name: Enable EPEL
+        if: matrix.enable_epel
+        run: dnf --assumeyes install epel-release
+
+      - name: Install build tools
+        run: >-
+          dnf --assumeyes --setopt=install_weak_deps=False install
+          git
+          make
+          rpm-build
+          systemd-rpm-macros
+
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Trust the checked-out workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Build RPM packages
+        run: make rpm
 
       - name: Install and verify RPM
         run: |
@@ -83,19 +121,40 @@ jobs:
             build/rpmbuild/RPMS/noarch/vidforge-*.noarch.rpm
           rpm --verify vidforge
 
-      - name: Prepare release assets
+      - name: Prepare target assets
+        shell: bash
         run: |
           mkdir dist
-          cp build/rpmbuild/RPMS/**/*.rpm build/rpmbuild/SRPMS/*.rpm dist/
-          cd dist
-          sha256sum -- *.rpm > SHA256SUMS
+          for rpm in build/rpmbuild/RPMS/**/*.rpm build/rpmbuild/SRPMS/*.rpm; do
+            filename="$(basename "$rpm" .rpm)"
+            cp "$rpm" "dist/${filename}.${{ matrix.target }}.rpm"
+          done
 
-      - name: Upload workflow artifacts
+      - name: Upload target artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: vidforge-${{ github.ref_name }}
+          name: vidforge-${{ github.ref_name }}-${{ matrix.target }}
           path: dist/
           if-no-files-found: error
+
+  publish:
+    name: Publish release
+    needs: build-rpm
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Download target artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: vidforge-${{ github.ref_name }}-*
+          path: dist
+          merge-multiple: true
+
+      - name: Generate checksums
+        working-directory: dist
+        run: sha256sum -- *.rpm > SHA256SUMS
 
       - name: Create or update GitHub release
         shell: bash
