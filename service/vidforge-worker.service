@@ -1,0 +1,24 @@
+[Unit]
+Description=Vidforge video encoding queue worker
+After=local-fs.target
+RequiresMountsFor=/srv/video/incoming /srv/video/av1
+
+[Service]
+User=vidforge
+Group=vidforge
+Environment=HOME=/var/lib/vidforge
+Environment=XDG_RUNTIME_DIR=/run/vidforge
+StateDirectory=vidforge
+LogsDirectory=vidforge
+RuntimeDirectory=vidforge
+ExecStart=/usr/bin/vidforge-worker
+Restart=on-failure
+RestartSec=10
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
+TimeoutStopSec=300
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

@@ -2,14 +2,14 @@
 
 set -Eeuo pipefail
 
-CONFIG_FILE="${AV1_CONFIG_FILE:-/etc/av1-encoder.conf}"
+CONFIG_FILE="${VIDFORGE_CONFIG_FILE:-/etc/vidforge.conf}"
 
 if [[ ! -r "$CONFIG_FILE" ]]; then
     printf 'Configuration file is not readable: %s\n' "$CONFIG_FILE" >&2
     exit 1
 fi
 
-# shellcheck source=/etc/av1-encoder.conf
+# shellcheck source=/etc/vidforge.conf
 source "$CONFIG_FILE"
 
 : "${QUEUE_DIR:?QUEUE_DIR is not configured}"
@@ -32,7 +32,7 @@ while true; do
 
     input_file="$(cat -- "$queue_file")"
 
-    if encode-av1-file "$input_file"; then
+    if vidforge-encode "$input_file"; then
         rm -f -- "$queue_file"
     else
         failed_name="$(basename -- "$queue_file")"

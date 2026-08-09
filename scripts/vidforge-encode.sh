@@ -2,14 +2,14 @@
 
 set -Eeuo pipefail
 
-CONFIG_FILE="${AV1_CONFIG_FILE:-/etc/av1-encoder.conf}"
+CONFIG_FILE="${VIDFORGE_CONFIG_FILE:-/etc/vidforge.conf}"
 
 if [[ ! -r "$CONFIG_FILE" ]]; then
     printf 'Configuration file is not readable: %s\n' "$CONFIG_FILE" >&2
     exit 1
 fi
 
-# shellcheck source=/etc/av1-encoder.conf
+# shellcheck source=/etc/vidforge.conf
 source "$CONFIG_FILE"
 
 : "${SOURCE_ROOT:?SOURCE_ROOT is not configured}"
@@ -18,7 +18,7 @@ source "$CONFIG_FILE"
 : "${AV1_PRESET:?AV1_PRESET is not configured}"
 : "${AV1_CRF:?AV1_CRF is not configured}"
 
-input_file="${1:?Usage: encode-av1-file INPUT_FILE}"
+input_file="${1:?Usage: vidforge-encode INPUT_FILE}"
 
 log()
 {

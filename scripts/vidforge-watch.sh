@@ -2,14 +2,14 @@
 
 set -Eeuo pipefail
 
-CONFIG_FILE="${AV1_CONFIG_FILE:-/etc/av1-encoder.conf}"
+CONFIG_FILE="${VIDFORGE_CONFIG_FILE:-/etc/vidforge.conf}"
 
 if [[ ! -r "$CONFIG_FILE" ]]; then
     printf 'Configuration file is not readable: %s\n' "$CONFIG_FILE" >&2
     exit 1
 fi
 
-# shellcheck source=/etc/av1-encoder.conf
+# shellcheck source=/etc/vidforge.conf
 source "$CONFIG_FILE"
 
 : "${SOURCE_ROOT:?SOURCE_ROOT is not configured}"
@@ -32,7 +32,7 @@ find "$SOURCE_ROOT" -type f \
         -iname '*.m2ts' \
     \) -print0 |
 while IFS= read -r -d '' video_file; do
-    queue-av1-file "$video_file"
+    vidforge-queue "$video_file"
 done
 
 # close_write handles files written directly into the folder.
@@ -46,5 +46,5 @@ inotifywait \
     --no-newline \
     "$SOURCE_ROOT" |
 while IFS= read -r -d '' video_file; do
-    queue-av1-file "$video_file"
+    vidforge-queue "$video_file"
 done

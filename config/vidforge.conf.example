@@ -1,0 +1,12 @@
+# Install this file as /etc/vidforge.conf, owned by root and not writable by
+# the account running the Vidforge services.
+
+SOURCE_ROOT="/srv/video/incoming"
+OUTPUT_ROOT="/srv/video/av1"
+QUEUE_DIR="/var/lib/vidforge/queue"
+FAILED_DIR="/var/lib/vidforge/failed"
+LOG_DIR="/var/log/vidforge"
+
+# SVT-AV1 settings
+AV1_PRESET="6"
+AV1_CRF="28"

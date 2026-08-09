@@ -41,15 +41,15 @@ jobs:
 
       - name: Run ShellCheck
         run: |
-          install -Dpm 0644 config/av1-encoder.conf.example /etc/av1-encoder.conf
+          install -Dpm 0644 config/vidforge.conf.example /etc/vidforge.conf
           shellcheck -x scripts/*.sh
 
       - name: Validate systemd units
         run: |
-          install -Dpm 0755 scripts/av1-queue-worker.sh /usr/bin/av1-queue-worker
-          install -Dpm 0755 scripts/encode-av1-file.sh /usr/bin/encode-av1-file
-          install -Dpm 0755 scripts/queue-av1-file.sh /usr/bin/queue-av1-file
-          install -Dpm 0755 scripts/watch-av1-folder.sh /usr/bin/watch-av1-folder
+          install -Dpm 0755 scripts/vidforge-worker.sh /usr/bin/vidforge-worker
+          install -Dpm 0755 scripts/vidforge-encode.sh /usr/bin/vidforge-encode
+          install -Dpm 0755 scripts/vidforge-queue.sh /usr/bin/vidforge-queue
+          install -Dpm 0755 scripts/vidforge-watch.sh /usr/bin/vidforge-watch
           systemd-analyze verify service/*.service
 
       - name: Build RPM
@@ -61,5 +61,5 @@ jobs:
       - name: Install and verify RPM
         run: |
           dnf --assumeyes --setopt=install_weak_deps=False install \
-            build/rpmbuild/RPMS/noarch/av1-encoder-*.noarch.rpm
-          rpm --verify av1-encoder
+            build/rpmbuild/RPMS/noarch/vidforge-*.noarch.rpm
+          rpm --verify vidforge

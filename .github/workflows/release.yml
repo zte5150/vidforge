@@ -46,7 +46,7 @@ jobs:
           tag_version="${GITHUB_REF_NAME#v}"
           make_version="$(awk '$1 == "VERSION" && $2 == ":=" { print $3 }' Makefile)"
           spec_version="$(rpmspec -q --queryformat '%{VERSION}\n' \
-            packaging/av1-encoder.spec | sort --unique)"
+            packaging/vidforge.spec | sort --unique)"
 
           if [[ "$tag_version" != "$make_version" || \
                 "$tag_version" != "$spec_version" ]]; then
@@ -57,7 +57,7 @@ jobs:
 
       - name: Validate Bash scripts
         run: |
-          install -Dpm 0644 config/av1-encoder.conf.example /etc/av1-encoder.conf
+          install -Dpm 0644 config/vidforge.conf.example /etc/vidforge.conf
           bash -n scripts/*.sh
           shellcheck -x scripts/*.sh
 
@@ -66,10 +66,10 @@ jobs:
 
       - name: Validate systemd units
         run: |
-          install -Dpm 0755 scripts/av1-queue-worker.sh /usr/bin/av1-queue-worker
-          install -Dpm 0755 scripts/encode-av1-file.sh /usr/bin/encode-av1-file
-          install -Dpm 0755 scripts/queue-av1-file.sh /usr/bin/queue-av1-file
-          install -Dpm 0755 scripts/watch-av1-folder.sh /usr/bin/watch-av1-folder
+          install -Dpm 0755 scripts/vidforge-worker.sh /usr/bin/vidforge-worker
+          install -Dpm 0755 scripts/vidforge-encode.sh /usr/bin/vidforge-encode
+          install -Dpm 0755 scripts/vidforge-queue.sh /usr/bin/vidforge-queue
+          install -Dpm 0755 scripts/vidforge-watch.sh /usr/bin/vidforge-watch
           systemd-analyze verify service/*.service
 
       - name: Build and lint RPM packages
@@ -80,8 +80,8 @@ jobs:
       - name: Install and verify RPM
         run: |
           dnf --assumeyes --setopt=install_weak_deps=False install \
-            build/rpmbuild/RPMS/noarch/av1-encoder-*.noarch.rpm
-          rpm --verify av1-encoder
+            build/rpmbuild/RPMS/noarch/vidforge-*.noarch.rpm
+          rpm --verify vidforge
 
       - name: Prepare release assets
         run: |
@@ -93,7 +93,7 @@ jobs:
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: av1-encoder-${{ github.ref_name }}
+          name: vidforge-${{ github.ref_name }}
           path: dist/
           if-no-files-found: error
 

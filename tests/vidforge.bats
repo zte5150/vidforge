@@ -9,7 +9,7 @@ setup()
     QUEUE_DIR="$TEST_ROOT/queue"
     FAILED_DIR="$TEST_ROOT/failed"
     LOG_DIR="$TEST_ROOT/log"
-    CONFIG_FILE="$TEST_ROOT/av1-encoder.conf"
+    CONFIG_FILE="$TEST_ROOT/vidforge.conf"
     MOCK_BIN="$TEST_ROOT/bin"
 
     mkdir -p "$SOURCE_ROOT" "$OUTPUT_ROOT" "$QUEUE_DIR" \
@@ -30,8 +30,8 @@ EOF
     input_file="$SOURCE_ROOT/a video.MP4"
     touch "$input_file"
 
-    run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$input_file"
+    run env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        bash "$REPO_ROOT/scripts/vidforge-queue.sh" "$input_file"
 
     [ "$status" -eq 0 ]
     [ "$(find "$QUEUE_DIR" -name '*.queue' -type f | wc -l)" -eq 1 ]
@@ -42,10 +42,10 @@ EOF
     input_file="$SOURCE_ROOT/video.mkv"
     touch "$input_file"
 
-    env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$input_file"
-    env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$input_file"
+    env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        bash "$REPO_ROOT/scripts/vidforge-queue.sh" "$input_file"
+    env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        bash "$REPO_ROOT/scripts/vidforge-queue.sh" "$input_file"
 
     [ "$(find "$QUEUE_DIR" -name '*.queue' -type f | wc -l)" -eq 1 ]
 }
@@ -53,17 +53,17 @@ EOF
 @test "unsupported and missing files are not queued" {
     touch "$SOURCE_ROOT/notes.txt"
 
-    env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$SOURCE_ROOT/notes.txt"
-    env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$SOURCE_ROOT/missing.mp4"
+    env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        bash "$REPO_ROOT/scripts/vidforge-queue.sh" "$SOURCE_ROOT/notes.txt"
+    env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        bash "$REPO_ROOT/scripts/vidforge-queue.sh" "$SOURCE_ROOT/missing.mp4"
 
     [ -z "$(find "$QUEUE_DIR" -name '*.queue' -type f -print -quit)" ]
 }
 
 @test "encoder treats a vanished input as completed work" {
-    run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$SOURCE_ROOT/missing.mp4"
+    run env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        bash "$REPO_ROOT/scripts/vidforge-encode.sh" "$SOURCE_ROOT/missing.mp4"
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Input no longer exists"* ]]
@@ -73,8 +73,8 @@ EOF
     outside_file="$TEST_ROOT/outside.mp4"
     touch "$outside_file"
 
-    run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$outside_file"
+    run env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        bash "$REPO_ROOT/scripts/vidforge-encode.sh" "$outside_file"
 
     [ "$status" -eq 1 ]
     [[ "$output" == *"Refusing path outside source directory"* ]]
@@ -84,8 +84,8 @@ EOF
     input_file="$SOURCE_ROOT/notes.txt"
     touch "$input_file"
 
-    run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$input_file"
+    run env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        bash "$REPO_ROOT/scripts/vidforge-encode.sh" "$input_file"
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Ignoring unsupported extension"* ]]
@@ -96,8 +96,8 @@ EOF
     output_file="$OUTPUT_ROOT/movie.av1.mkv"
     touch "$input_file" "$output_file" "$output_file.done"
 
-    run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$input_file"
+    run env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
+        bash "$REPO_ROOT/scripts/vidforge-encode.sh" "$input_file"
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Already encoded: movie.mp4"* ]]
@@ -128,10 +128,10 @@ touch "$host_output"
 EOF
     chmod +x "$MOCK_BIN/sleep" "$MOCK_BIN/podman"
 
-    run env AV1_CONFIG_FILE="$CONFIG_FILE" \
+    run env VIDFORGE_CONFIG_FILE="$CONFIG_FILE" \
         TEST_OUTPUT_ROOT="$OUTPUT_ROOT" \
         PATH="$MOCK_BIN:$PATH" \
-        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$input_file"
+        bash "$REPO_ROOT/scripts/vidforge-encode.sh" "$input_file"
 
     [ "$status" -eq 0 ]
     [ -f "$output_file" ]

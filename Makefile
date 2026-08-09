@@ -1,4 +1,4 @@
-NAME := av1-encoder
+NAME := vidforge
 VERSION := 0.1.0
 # rpmbuild's generated helper scripts do not consistently quote _topdir.
 # Keep its working tree free of spaces, then copy the finished packages back.
@@ -12,10 +12,10 @@ rpm:
 		"$(TOPDIR)/SOURCES" "$(TOPDIR)/SPECS" "$(TOPDIR)/SRPMS"
 	git archive --format=tar.gz --prefix="$(NAME)-$(VERSION)/" \
 		--output="$(TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz" HEAD
-	cp packaging/av1-encoder.sysusers "$(TOPDIR)/SOURCES/"
-	cp packaging/av1-encoder.spec "$(TOPDIR)/SPECS/"
+	cp packaging/vidforge.sysusers "$(TOPDIR)/SOURCES/"
+	cp packaging/vidforge.spec "$(TOPDIR)/SPECS/"
 	rpmbuild -ba --define "_topdir $(TOPDIR)" \
-		"$(TOPDIR)/SPECS/av1-encoder.spec"
+		"$(TOPDIR)/SPECS/vidforge.spec"
 	mkdir -p "$(OUTPUT_TOPDIR)/RPMS" "$(OUTPUT_TOPDIR)/SRPMS"
 	cp -a "$(TOPDIR)/RPMS/." "$(OUTPUT_TOPDIR)/RPMS/"
 	cp -a "$(TOPDIR)/SRPMS/." "$(OUTPUT_TOPDIR)/SRPMS/"

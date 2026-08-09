@@ -1,14 +1,14 @@
 [Unit]
-Description=Watch recursively for videos to encode as AV1
+Description=Vidforge directory watcher
 After=local-fs.target
 RequiresMountsFor=/srv/video/incoming
 
 [Service]
 Type=simple
-User=av1-encoder
-Group=av1-encoder
-StateDirectory=av1-encoder
-ExecStart=/usr/bin/watch-av1-folder
+User=vidforge
+Group=vidforge
+StateDirectory=vidforge
+ExecStart=/usr/bin/vidforge-watch
 Restart=on-failure
 RestartSec=5
 
