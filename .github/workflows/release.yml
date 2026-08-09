@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Install validation and release tools
+        run: >-
+          dnf --assumeyes --setopt=install_weak_deps=False install
+          bats
+          git
+          gh
+          glibc-langpack-en
+          make
+          rpm-build
+          rpmlint
+          ShellCheck
+          systemd
+
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Trust the checked-out workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Validate release version
+        shell: bash
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          make_version="$(awk '$1 == "VERSION" && $2 == ":=" { print $3 }' Makefile)"
+          spec_version="$(rpmspec -q --queryformat '%{VERSION}\n' \
+            packaging/av1-encoder.spec | sort --unique)"
+
+          if [[ "$tag_version" != "$make_version" || \
+                "$tag_version" != "$spec_version" ]]; then
+              printf 'Version mismatch: tag=%s Makefile=%s spec=%s\n' \
+                "$tag_version" "$make_version" "$spec_version" >&2
+              exit 1
+          fi
+
+      - name: Validate Bash scripts
+        run: |
+          install -Dpm 0644 config/av1-encoder.conf.example /etc/av1-encoder.conf
+          bash -n scripts/*.sh
+          shellcheck -x scripts/*.sh
+
+      - name: Run behavioral tests
+        run: bats --print-output-on-failure tests
+
+      - name: Validate systemd units
+        run: |
+          install -Dpm 0755 scripts/av1-queue-worker.sh /usr/bin/av1-queue-worker
+          install -Dpm 0755 scripts/encode-av1-file.sh /usr/bin/encode-av1-file
+          install -Dpm 0755 scripts/queue-av1-file.sh /usr/bin/queue-av1-file
+          install -Dpm 0755 scripts/watch-av1-folder.sh /usr/bin/watch-av1-folder
+          systemd-analyze verify service/*.service
+
+      - name: Build and lint RPM packages
+        run: |
+          make rpm
+          rpmlint build/rpmbuild/RPMS/**/*.rpm build/rpmbuild/SRPMS/*.rpm
+
+      - name: Install and verify RPM
+        run: |
+          dnf --assumeyes --setopt=install_weak_deps=False install \
+            build/rpmbuild/RPMS/noarch/av1-encoder-*.noarch.rpm
+          rpm --verify av1-encoder
+
+      - name: Prepare release assets
+        run: |
+          mkdir dist
+          cp build/rpmbuild/RPMS/**/*.rpm build/rpmbuild/SRPMS/*.rpm dist/
+          cd dist
+          sha256sum -- *.rpm > SHA256SUMS
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: av1-encoder-${{ github.ref_name }}
+          path: dist/
+          if-no-files-found: error
+
+      - name: Create or update GitHub release
+        shell: bash
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+              gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+              gh release create "$GITHUB_REF_NAME" dist/* \
+                --generate-notes \
+                --title "$GITHUB_REF_NAME" \
+                --verify-tag
+          fi
