@@ -1,0 +1,28 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  behavioral-tests:
+    name: Behavioral tests
+    runs-on: ubuntu-latest
+    container: fedora:latest
+
+    steps:
+      - name: Install test tools
+        run: dnf --assumeyes --setopt=install_weak_deps=False install bats git
+
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run behavioral tests
+        run: bats --print-output-on-failure tests
