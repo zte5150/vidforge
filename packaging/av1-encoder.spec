@@ -28,21 +28,21 @@ files, and encode them to AV1 one at a time using FFmpeg in Podman.
 
 %install
 install -Dpm 0755 scripts/av1-queue-worker.sh \
-    %{buildroot}%{_bindir}/av1-queue-worker
+    "%{buildroot}%{_bindir}/av1-queue-worker"
 install -Dpm 0755 scripts/encode-av1-file.sh \
-    %{buildroot}%{_bindir}/encode-av1-file
+    "%{buildroot}%{_bindir}/encode-av1-file"
 install -Dpm 0755 scripts/queue-av1-file.sh \
-    %{buildroot}%{_bindir}/queue-av1-file
+    "%{buildroot}%{_bindir}/queue-av1-file"
 install -Dpm 0755 scripts/watch-av1-folder.sh \
-    %{buildroot}%{_bindir}/watch-av1-folder
+    "%{buildroot}%{_bindir}/watch-av1-folder"
 install -Dpm 0644 config/av1-encoder.conf.example \
-    %{buildroot}%{_sysconfdir}/av1-encoder.conf
+    "%{buildroot}%{_sysconfdir}/av1-encoder.conf"
 install -Dpm 0644 service/av1-watcher.service \
-    %{buildroot}%{_unitdir}/av1-watcher.service
+    "%{buildroot}%{_unitdir}/av1-watcher.service"
 install -Dpm 0644 service/av1-worker.service \
-    %{buildroot}%{_unitdir}/av1-worker.service
-install -Dpm 0644 %{SOURCE1} \
-    %{buildroot}%{_sysusersdir}/av1-encoder.conf
+    "%{buildroot}%{_unitdir}/av1-worker.service"
+install -Dpm 0644 "%{SOURCE1}" \
+    "%{buildroot}%{_sysusersdir}/av1-encoder.conf"
 
 %pre
 %sysusers_create_compat %{SOURCE1}
