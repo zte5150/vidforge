@@ -31,7 +31,7 @@ EOF
     touch "$input_file"
 
     run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        "$REPO_ROOT/scripts/queue-av1-file.sh" "$input_file"
+        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$input_file"
 
     [ "$status" -eq 0 ]
     [ "$(find "$QUEUE_DIR" -name '*.queue' -type f | wc -l)" -eq 1 ]
@@ -43,9 +43,9 @@ EOF
     touch "$input_file"
 
     env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        "$REPO_ROOT/scripts/queue-av1-file.sh" "$input_file"
+        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$input_file"
     env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        "$REPO_ROOT/scripts/queue-av1-file.sh" "$input_file"
+        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$input_file"
 
     [ "$(find "$QUEUE_DIR" -name '*.queue' -type f | wc -l)" -eq 1 ]
 }
@@ -54,16 +54,16 @@ EOF
     touch "$SOURCE_ROOT/notes.txt"
 
     env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        "$REPO_ROOT/scripts/queue-av1-file.sh" "$SOURCE_ROOT/notes.txt"
+        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$SOURCE_ROOT/notes.txt"
     env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        "$REPO_ROOT/scripts/queue-av1-file.sh" "$SOURCE_ROOT/missing.mp4"
+        bash "$REPO_ROOT/scripts/queue-av1-file.sh" "$SOURCE_ROOT/missing.mp4"
 
     [ -z "$(find "$QUEUE_DIR" -name '*.queue' -type f -print -quit)" ]
 }
 
 @test "encoder treats a vanished input as completed work" {
     run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        "$REPO_ROOT/scripts/encode-av1-file.sh" "$SOURCE_ROOT/missing.mp4"
+        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$SOURCE_ROOT/missing.mp4"
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Input no longer exists"* ]]
@@ -74,7 +74,7 @@ EOF
     touch "$outside_file"
 
     run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        "$REPO_ROOT/scripts/encode-av1-file.sh" "$outside_file"
+        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$outside_file"
 
     [ "$status" -eq 1 ]
     [[ "$output" == *"Refusing path outside source directory"* ]]
@@ -85,7 +85,7 @@ EOF
     touch "$input_file"
 
     run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        "$REPO_ROOT/scripts/encode-av1-file.sh" "$input_file"
+        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$input_file"
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Ignoring unsupported extension"* ]]
@@ -97,7 +97,7 @@ EOF
     touch "$input_file" "$output_file" "$output_file.done"
 
     run env AV1_CONFIG_FILE="$CONFIG_FILE" \
-        "$REPO_ROOT/scripts/encode-av1-file.sh" "$input_file"
+        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$input_file"
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Already encoded: movie.mp4"* ]]
@@ -131,7 +131,7 @@ EOF
     run env AV1_CONFIG_FILE="$CONFIG_FILE" \
         TEST_OUTPUT_ROOT="$OUTPUT_ROOT" \
         PATH="$MOCK_BIN:$PATH" \
-        "$REPO_ROOT/scripts/encode-av1-file.sh" "$input_file"
+        bash "$REPO_ROOT/scripts/encode-av1-file.sh" "$input_file"
 
     [ "$status" -eq 0 ]
     [ -f "$output_file" ]
