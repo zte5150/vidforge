@@ -4,7 +4,7 @@ Release:        1%{?dist}
 Summary:        Vidforge directory-watching video encoding service
 
 License:        GPL-3.0-only
-URL:            https://github.com/zte5150/encode_videos_service
+URL:            https://github.com/zte5150/vidforge
 Source0:        %{name}-%{version}.tar.gz
 Source1:        %{name}.sysusers
 
