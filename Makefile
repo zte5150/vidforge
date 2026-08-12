@@ -1,5 +1,5 @@
 NAME := vidforge
-VERSION := 0.1.0
+VERSION := $(shell awk '$$1 == "Version:" { print $$2; exit }' packaging/vidforge.spec)
 # rpmbuild's generated helper scripts do not consistently quote _topdir.
 # Keep its working tree free of spaces, then copy the finished packages back.
 TOPDIR ?= /tmp/$(NAME)-rpmbuild
