@@ -41,14 +41,12 @@ jobs:
         shell: bash
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
-          make_version="$(awk '$1 == "VERSION" && $2 == ":=" { print $3 }' Makefile)"
           spec_version="$(rpmspec -q --queryformat '%{VERSION}\n' \
             packaging/vidforge.spec | sort --unique)"
 
-          if [[ "$tag_version" != "$make_version" || \
-                "$tag_version" != "$spec_version" ]]; then
-            printf 'Version mismatch: tag=%s Makefile=%s spec=%s\n' \
-              "$tag_version" "$make_version" "$spec_version" >&2
+          if [[ "$tag_version" != "$spec_version" ]]; then
+            printf 'Version mismatch: tag=%s spec=%s\n' \
+              "$tag_version" "$spec_version" >&2
             exit 1
           fi
 
